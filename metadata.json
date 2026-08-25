@@ -1,0 +1,6 @@
+{
+  "name": "FINTRACK",
+  "description": "FINTRACK AI - Intelligent Financial Companion & Dashboard with expense tracking, analytics, and AI advisor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
