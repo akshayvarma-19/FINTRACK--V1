@@ -44,7 +44,9 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
       key: string;
       income: number;
       expense: number;
+      expenses: number;
       net: number;
+      label: string;
     }> = [];
 
     for (let i = monthCount - 1; i >= 0; i--) {
@@ -58,7 +60,9 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
         key,
         income: 0,
         expense: 0,
-        net: 0
+        expenses: 0,
+        net: 0,
+        label: `${MONTH_NAMES[m]} ${String(y).slice(-2)}`
       });
     }
 
@@ -80,6 +84,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> 
           targetMonth.income += t.amount;
         } else if (t.type === 'expense') {
           targetMonth.expense += t.amount;
+          targetMonth.expenses += t.amount;
         }
       }
     }

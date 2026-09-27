@@ -42,7 +42,9 @@ export interface MonthlyTrend {
   key: string;
   income: number;
   expense: number;
+  expenses?: number;
   net: number;
+  label?: string;
 }
 
 export interface CategoryAnalytics {

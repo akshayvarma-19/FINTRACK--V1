@@ -2424,11 +2424,11 @@ export default function App() {
                     </div>
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono text-xs font-semibold">
                       <TrendingUp className="w-3.5 h-3.5" />
-                      {dashboardSummary ? `Mo: ₹${dashboardSummary.currentMonthIncome.toLocaleString('en-IN')}` : 'Current Mo'}
+                      {dashboardSummary ? `Mo: ₹${(dashboardSummary.currentMonthIncome ?? 0).toLocaleString('en-IN')}` : 'Current Mo'}
                     </span>
                   </div>
                   <p className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Total Income</p>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">₹{effectiveIncome.toLocaleString('en-IN')}</h3>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">₹{(effectiveIncome ?? 0).toLocaleString('en-IN')}</h3>
                 </div>
 
                 {/* Total Expenses */}
@@ -2439,7 +2439,7 @@ export default function App() {
                     </div>
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30 font-mono text-xs font-semibold">
                       <TrendingUp className="w-3.5 h-3.5" />
-                      {dashboardSummary ? `Mo: ₹${dashboardSummary.currentMonthExpenses.toLocaleString('en-IN')}` : 'Current Mo'}
+                      {dashboardSummary ? `Mo: ₹${(dashboardSummary.currentMonthExpenses ?? 0).toLocaleString('en-IN')}` : 'Current Mo'}
                     </span>
                   </div>
                   <p className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Total Expenses</p>
@@ -3837,39 +3837,43 @@ export default function App() {
                           <div>
                             {(() => {
                               const maxVal = Math.max(
-                                ...trends.flatMap((m) => [m.income, m.expenses]),
+                                ...trends.flatMap((m) => [m.income ?? 0, m.expense ?? (m as any).expenses ?? 0]),
                                 1
                               );
                               return (
                                 <div className="h-60 flex items-end justify-between gap-3 pt-6 px-2">
                                   {trends.map((trend) => {
-                                    const incomePct = trend.income > 0 ? Math.max(10, Math.round((trend.income / maxVal) * 100)) : 4;
-                                    const expensePct = trend.expenses > 0 ? Math.max(10, Math.round((trend.expenses / maxVal) * 100)) : 4;
+                                    const inc = trend.income ?? 0;
+                                    const exp = trend.expense ?? (trend as any).expenses ?? 0;
+                                    const net = trend.net ?? (inc - exp);
+                                    const label = trend.label || `${trend.month} ${trend.year ? String(trend.year).slice(-2) : ''}` || trend.month;
+                                    const incomePct = inc > 0 ? Math.max(10, Math.round((inc / maxVal) * 100)) : 4;
+                                    const expensePct = exp > 0 ? Math.max(10, Math.round((exp / maxVal) * 100)) : 4;
                                     return (
-                                      <div key={trend.month} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                                      <div key={trend.key || `${trend.month}-${trend.year}`} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                                         <div className="w-full flex items-end justify-center gap-1.5 h-full relative">
                                           {/* Income Bar */}
                                           <div
                                             style={{ height: `${incomePct}%` }}
                                             className="w-1/2 max-w-[20px] rounded-t-lg bg-emerald-400/90 group-hover:brightness-125 transition-all shadow-md shadow-emerald-500/10"
-                                            title={`Income: ₹${trend.income.toLocaleString('en-IN')}`}
+                                            title={`Income: ₹${inc.toLocaleString('en-IN')}`}
                                           />
                                           {/* Expense Bar */}
                                           <div
                                             style={{ height: `${expensePct}%` }}
                                             className="w-1/2 max-w-[20px] rounded-t-lg bg-rose-400/90 group-hover:brightness-125 transition-all shadow-md shadow-rose-500/10"
-                                            title={`Expense: ₹${trend.expenses.toLocaleString('en-IN')}`}
+                                            title={`Expense: ₹${exp.toLocaleString('en-IN')}`}
                                           />
 
                                           {/* Hover Tooltip */}
                                           <div className="absolute -top-12 bg-[#020617] text-white p-2 rounded-xl text-[10px] font-mono border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-2xl">
-                                            <div className="text-emerald-400">+₹{trend.income.toLocaleString('en-IN')}</div>
-                                            <div className="text-rose-400">-₹{trend.expenses.toLocaleString('en-IN')}</div>
-                                            <div className="text-slate-400 border-t border-white/10 mt-1 pt-0.5">Net: ₹{trend.net.toLocaleString('en-IN')}</div>
+                                            <div className="text-emerald-400">+₹{inc.toLocaleString('en-IN')}</div>
+                                            <div className="text-rose-400">-₹{exp.toLocaleString('en-IN')}</div>
+                                            <div className="text-slate-400 border-t border-white/10 mt-1 pt-0.5">Net: ₹{net.toLocaleString('en-IN')}</div>
                                           </div>
                                         </div>
                                         <span className="text-[11px] font-mono text-slate-400 truncate w-full text-center">
-                                          {trend.label}
+                                          {label}
                                         </span>
                                       </div>
                                     );
@@ -4009,10 +4013,10 @@ export default function App() {
                       <span className="text-xs font-mono uppercase tracking-widest text-slate-400">Total Monthly Utilization ({budgetPeriod})</span>
                       <div className="flex items-baseline gap-3">
                         <span className="text-3xl font-bold font-mono text-white">
-                          ₹{budgetSummary.totalSpent.toLocaleString('en-IN')}
+                          ₹{(budgetSummary?.totalSpent ?? 0).toLocaleString('en-IN')}
                         </span>
                         <span className="text-sm font-mono text-slate-400">
-                          of ₹{budgetSummary.totalBudgeted.toLocaleString('en-IN')} budgeted
+                          of ₹{(budgetSummary?.totalBudgeted ?? 0).toLocaleString('en-IN')} budgeted
                         </span>
                       </div>
                     </div>
@@ -4020,8 +4024,8 @@ export default function App() {
                     <div className="flex items-center gap-6">
                       <div className="text-right">
                         <span className="text-xs font-mono uppercase text-slate-400 block">Remaining Buffer</span>
-                        <span className={`text-xl font-bold font-mono ${budgetSummary.remainingTotal >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {budgetSummary.remainingTotal >= 0 ? '₹' + budgetSummary.remainingTotal.toLocaleString('en-IN') : '-₹' + Math.abs(budgetSummary.remainingTotal).toLocaleString('en-IN')}
+                        <span className={`text-xl font-bold font-mono ${(budgetSummary?.remainingTotal ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {(budgetSummary?.remainingTotal ?? 0) >= 0 ? '₹' + (budgetSummary?.remainingTotal ?? 0).toLocaleString('en-IN') : '-₹' + Math.abs(budgetSummary?.remainingTotal ?? 0).toLocaleString('en-IN')}
                         </span>
                       </div>
 
@@ -4129,10 +4133,10 @@ export default function App() {
                           {/* Consumption Stats */}
                           <div className="flex items-baseline justify-between mt-3 mb-2 font-mono">
                             <span className="text-xl font-bold text-white">
-                              ₹{b.spent.toLocaleString('en-IN')}
+                              ₹{(b.spent ?? 0).toLocaleString('en-IN')}
                             </span>
                             <span className="text-xs text-slate-400">
-                              Cap: ₹{b.amount.toLocaleString('en-IN')}
+                              Cap: ₹{(b.amount ?? 0).toLocaleString('en-IN')}
                             </span>
                           </div>
 
@@ -4166,7 +4170,7 @@ export default function App() {
                           </span>
 
                           <span className={`text-[11px] font-medium ${isExceeded ? 'text-rose-400 font-bold' : 'text-slate-300'}`}>
-                            {b.remaining >= 0 ? `₹${b.remaining.toLocaleString('en-IN')} buffer` : `₹${Math.abs(b.remaining).toLocaleString('en-IN')} over`}
+                            {(b.remaining ?? 0) >= 0 ? `₹${(b.remaining ?? 0).toLocaleString('en-IN')} buffer` : `₹${Math.abs(b.remaining ?? 0).toLocaleString('en-IN')} over`}
                           </span>
                         </div>
                       </div>
